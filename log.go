@@ -51,8 +51,6 @@ func Init(c *Config) (err error) {
 	cfg := zap.NewProductionConfig()
 	cfg.EncoderConfig.TimeKey = "unix"
 	cfg.Level = zap.NewAtomicLevelAt(zapcore.Level(c.Level))
-	cfg.Sampling.Initial = 1000
-	cfg.Sampling.Thereafter = 1000
 
 	logger = &log{
 		config:        &cfg,
@@ -90,7 +88,7 @@ func (l *log) check() (*zap.Logger, error) {
 		if err != nil {
 			return nil, err
 		}
-		logger.config.OutputPaths = []string{fmt.Sprintf("%s/%s", logger.logPath, fileName)}
+		logger.config.OutputPaths = []string{fmt.Sprintf(fileNameFormat, logger.logPath, fileName)}
 		logger.logger, err = logger.config.Build(zap.AddCallerSkip(logger.callerSkip))
 		return logger.logger, err
 	}
@@ -173,10 +171,8 @@ func getLogFileName(l *log) (string, bool) {
 		return fmt.Sprintf(fileNameFormat, l.logName, timeZero(l.create).Format(l.layout)), false
 	}
 
-	var h, m, s int
+	var h, m, s, upIndex int
 	dString := l.d.String()
-
-	upIndex := 0
 	for i := 0; i < len(dString); i++ {
 		switch c := int(dString[i]); c {
 		case 'h':
@@ -208,7 +204,6 @@ func getLogFileName(l *log) (string, bool) {
 
 	if now.Unix()-l.create.Unix() >= l.d.Nanoseconds()/time.Second.Nanoseconds() {
 		l.create = now
-		return fmt.Sprintf(fileNameFormat, l.logName, l.create.Format(l.layout)), true
 	}
 
 	return fmt.Sprintf(fileNameFormat, l.logName, l.create.Format(l.layout)), false
