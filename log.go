@@ -1,12 +1,13 @@
-package log
+package logger
 
 import (
 	"time"
 
 	"fmt"
+
+	"github.com/spf13/cast"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"github.com/spf13/cast"
 )
 
 // update 2018年10月17日14:40:32
@@ -72,7 +73,7 @@ func Init(c *Config) (err error) {
 		}
 
 		fileName, _ := getLogFileName(logger)
-		logger.config.OutputPaths = []string{fmt.Sprintf("%s/%s", logger.logPath, fileName)}
+		logger.config.OutputPaths = []string{fmt.Sprintf(fileNameFormat, logger.logPath, fileName)}
 	}
 
 	logger.logger, err = logger.config.Build(zap.AddCallerSkip(logger.callerSkip))
