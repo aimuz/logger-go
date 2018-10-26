@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"path"
 )
 
 // update 2018年10月17日14:40:32
@@ -61,6 +62,7 @@ func Init(c *Config) (err error) {
 		outputConsole: c.OutputConsole,
 		callerSkip:    1,
 	}
+	logger.config.OutputPaths = []string{}
 	if c.OutputFile {
 		if c.LogName == "" {
 			c.LogName = "logger"
@@ -71,7 +73,11 @@ func Init(c *Config) (err error) {
 		}
 
 		fileName, _ := getLogFileName(logger)
-		logger.config.OutputPaths = []string{fmt.Sprintf(fileNameFormat, logger.logPath, fileName)}
+		logger.config.OutputPaths = append(logger.config.OutputPaths, path.Join(logger.logPath, fileName))
+	}
+
+	if c.OutputConsole {
+		logger.config.OutputPaths = append(logger.config.OutputPaths, "stderr")
 	}
 
 	logger.logger, err = logger.config.Build(zap.AddCallerSkip(logger.callerSkip))
